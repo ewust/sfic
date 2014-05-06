@@ -55,6 +55,14 @@ class Key(object):
             if len(key) != self.pins:
                 raise Exception("Expected %d pins, got %d pins" % (self.pins, len(key)))
             self.cuts = [int(key[i]) for i in range(self.pins)]
+            self.verify_MACS()
+
+
+    # verify that this key follows the MACS
+    def verify_MACS(self):
+        for i in range(1, self.pins):
+            if abs(self.cuts[i] - self.cuts[i-1]) > self.macs:
+                raise Exception("Pins (%d,%d): |%d-%d| > MACS (%d)" % (i, i-1, self.cuts[i], self.cuts[i-1], self.macs))
 
 
     ### (re)generates a key, obeying MACS and the min/max_cut depths

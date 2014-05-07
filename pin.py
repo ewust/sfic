@@ -77,6 +77,9 @@ class Key(object):
     def __getitem__(self, i):
         return self.cuts[i]
 
+    def __len__(self):
+        return len(self.cuts)
+
     def __str__(self):
         return ''.join([str(x) for x in self.cuts])
 
@@ -103,17 +106,22 @@ print "Master key:  %s" % master_key
 ### Combinate
 ###
 
-pins = []
-for i in range(args.pins):
-    bottom_pin = min(change_key[i], master_key[i])
-    master_pin = max(change_key[i], master_key[i]) - bottom_pin
+def combinate(change_key, master_key, control_key):
+    pins = []
+    for i in range(len(change_key)):
+        bottom_pin = min(change_key[i], master_key[i])
+        master_pin = max(change_key[i], master_key[i]) - bottom_pin
 
-    build_up_pin = control_key[i] + 10 - (bottom_pin + master_pin)
+        build_up_pin = control_key[i] + 10 - (bottom_pin + master_pin)
 
-    top_pin = 23 - (build_up_pin + master_pin + bottom_pin)
+        top_pin = 23 - (build_up_pin + master_pin + bottom_pin)
 
-    pins.append([top_pin, build_up_pin, master_pin, bottom_pin])
+        pins.append([top_pin, build_up_pin, master_pin, bottom_pin])
 
+    return pins
+
+
+pins = combinate(change_key, master_key, control_key)
 
 pin_names = ['TP', 'BU', 'MP', 'BP']
 for pin_idx in range(len(pin_names)):

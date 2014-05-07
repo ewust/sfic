@@ -24,19 +24,8 @@ elif args.type == "kwikset":
     args.cuts = "1-7"
     args.MACS = 4
 
-
 # decode the cut range (e.g. 0-9 for sfic)
 cut_min, cut_max = [int(x) for x in args.cuts.split("-")]
-
-
-def gen_key(cut_min, cut_max, pins):
-    return [random.randint(cut_min, cut_max) for i in range(pins)]
-
-# Takes a key as a string "13782" and returns as array of ints [1, 3, 7, 8, 2]
-def decode_key(key):
-    return [int(key[i]) for i in range(len(key))]
-
-
 
 class Key(object):
     def __init__(self, key=None, pins=6, min_cut=0, max_cut=9, macs=9):

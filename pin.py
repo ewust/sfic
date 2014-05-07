@@ -74,6 +74,9 @@ class Key(object):
                                  min(self.max_cut, (last + self.macs)))
             self.cuts.append(cut)
 
+    def __getitem__(self, i):
+        return self.cuts[i]
+
     def __str__(self):
         return ''.join([str(x) for x in self.cuts])
 
@@ -95,4 +98,26 @@ print "Change key:  %s" % change_key
 print "Control key: %s" % control_key
 print "Master key:  %s" % master_key
 
-#for i in range(args.pins):
+
+###
+### Combinate
+###
+
+pins = []
+for i in range(args.pins):
+    bottom_pin = min(change_key[i], master_key[i])
+    master_pin = max(change_key[i], master_key[i]) - bottom_pin
+
+    build_up_pin = control_key[i] + 10 - (bottom_pin + master_pin)
+
+    top_pin = 23 - (build_up_pin + master_pin + bottom_pin)
+
+    pins.append([top_pin, build_up_pin, master_pin, bottom_pin])
+
+
+pin_names = ['TP', 'BU', 'MP', 'BP']
+for pin_idx in range(len(pin_names)):
+    buf = '%s  ' % pin_names[pin_idx]
+    for i in range(args.pins):
+        buf += '% 4d ' % pins[i][pin_idx]
+    print buf

@@ -127,5 +127,8 @@ pin_names = ['TP', 'BU', 'MP', 'BP']
 for pin_idx in range(len(pin_names)):
     buf = '%s  ' % pin_names[pin_idx]
     for i in range(args.pins):
-        buf += '% 4d ' % pins[i][pin_idx]
+        pin = str(pins[i][pin_idx])
+        if (pin_idx != (len(pin_names)-1)) and pin == '0':
+            pin = '-'
+        buf += '% 4s ' % pin
     print buf

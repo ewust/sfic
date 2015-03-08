@@ -28,13 +28,14 @@ elif args.type == "kwikset":
 cut_min, cut_max = [int(x) for x in args.cuts.split("-")]
 
 class Key(object):
-    def __init__(self, key=None, pins=6, min_cut=0, max_cut=9, macs=9):
+    def __init__(self, key=None, pins=6, min_cut=0, max_cut=9, macs=9, parity=None):
 
         # Save constraints
         self.pins = pins
         self.min_cut = min_cut
         self.max_cut = max_cut
         self.macs = macs
+        self.parity = parity
 
         # Generate random key given constraints
         self.gen_key()
@@ -53,14 +54,27 @@ class Key(object):
             if abs(self.cuts[i] - self.cuts[i-1]) > self.macs:
                 raise Exception("Pins (%d,%d): |%d-%d| > MACS (%d)" % (i, i-1, self.cuts[i], self.cuts[i-1], self.macs))
 
+    # Return the odd/even parity array (0 for even, 1 for odd)
+    def get_parity(self):
+        return [x%2 for x in self.cuts]
 
-    ### (re)generates a key, obeying MACS and the min/max_cut depths
+    def gen_cut(self, idx, last_cut=None):
+        while 1:
+            if last_cut is None:
+                cut = random.randint(self.min_cut, self.max_cut)
+            else:
+                cut = random.randint(max(self.min_cut, (last_cut - self.macs)), \
+                                     min(self.max_cut, (last_cut + self.macs)))
+
+            if self.parity is None or self.parity[idx] == (cut % 2):
+                return cut
+
+    ### (re)generates a key, obeying parity, MACS and the min/max_cut depths
     def gen_key(self):
-        self.cuts = [random.randint(self.min_cut, self.max_cut)]
+        self.cuts = [self.gen_cut(0)]
         for i in range(1, self.pins):
             last = self.cuts[i-1]
-            cut = random.randint(max(self.min_cut, (last - self.macs)), \
-                                 min(self.max_cut, (last + self.macs)))
+            cut = self.gen_cut(i, last)
             self.cuts.append(cut)
 
     def __getitem__(self, i):
@@ -76,14 +90,19 @@ class Key(object):
 ###
 ###
 
-# generate missing keys
-change_key = Key(key=args.change_key, pins=args.pins, min_cut=cut_min, max_cut=cut_max, macs=args.MACS)
+# Generate control first
 control_key = Key(key=args.control_key, pins=args.pins, min_cut=cut_min, max_cut=cut_max, macs=args.MACS)
-# Default to no master key
-master_key = change_key
-if args.master_key is not None:
-    master_key = Key(key=args.master_key, pins=args.pins, min_cut=cut_min, max_cut=cut_max, macs=args.MACS)
+parity = control_key.get_parity()
 
+# Master obeys parity
+master_key = None
+if args.master_key is not None:
+    master_key = Key(key=args.master_key, pins=args.pins, min_cut=cut_min, max_cut=cut_max, macs=args.MACS, parity=parity)
+
+# generate missing keys
+change_key = Key(key=args.change_key, pins=args.pins, min_cut=cut_min, max_cut=cut_max, macs=args.MACS, parity=parity)
+if master_key is None:
+    master_key = change_key
 
 
 print "Change key:  %s" % change_key
